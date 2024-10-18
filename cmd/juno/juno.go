@@ -360,7 +360,7 @@ func NewCmd(config *node.Config, run func(*cobra.Command, []string) error) *cobr
 	junoCmd.MarkFlagsMutuallyExclusive(p2pFeederNodeF, p2pPeersF)
 	junoCmd.Flags().String(pluginPathF, defaultPluginPath, pluginPathUsage)
 
-	junoCmd.AddCommand(GenP2PKeyPair(), DBCmd(defaultDBPath))
+	junoCmd.AddCommand(GenP2PKeyPair(), DBCmd(defaultDBPath), OfflineSync())
 
 	return junoCmd
 }
