@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/NethermindEth/juno/core"
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/NethermindEth/juno/db/pebble"
+	"github.com/NethermindEth/juno/migration"
 	"github.com/NethermindEth/juno/node"
 	"github.com/NethermindEth/juno/utils"
 	"github.com/spf13/cobra"
@@ -23,7 +25,8 @@ func OfflineSync() *cobra.Command {
 
 	cmd.Flags().String(dbPathF, "", "Path to the node database")
 	cmd.Flags().String("sync-from", "", "Path to the feeder database")
-	cmd.Flags().Uint64("block-num", 0, "Block number to sync to")
+	cmd.Flags().Uint64("start", 0, "Block number to start syncing from")
+	cmd.Flags().Uint64("end", 0, "Block number to sync to")
 	return cmd
 }
 
@@ -58,14 +61,33 @@ func offlineSync(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	target, err := cmd.Flags().GetUint64("block-num")
+	log, err := utils.NewZapLogger(utils.INFO, false)
+	if err != nil {
+		return err
+	}
+
+	// migrate the node db
+	if err := migration.MigrateIfNeeded(ctx, nodeDB, &utils.Sepolia, log); err != nil {
+		if errors.Is(err, context.Canceled) {
+			return fmt.Errorf("DB Migration cancelled")
+		}
+		return fmt.Errorf("error while migrating the DB: %w", err)
+	}
+
+	start, err := cmd.Flags().GetUint64("start")
+	if err != nil {
+		return err
+	}
+
+	end, err := cmd.Flags().GetUint64("end")
 	if err != nil {
 		return err
 	}
 
 	nodeBc := blockchain.New(nodeDB, &utils.Sepolia)
+
 	startTime := time.Now()
-	for i := uint64(0); i < target+1; i++ {
+	for i := start + 1; i < end+1; i++ {
 		lastTime := time.Now()
 		block, err := feederBc.BlockByNumber(i)
 		if err != nil {
