@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/NethermindEth/juno/core"
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/NethermindEth/juno/db/pebble"
+	"github.com/NethermindEth/juno/node"
 	"github.com/NethermindEth/juno/utils"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +28,13 @@ func OfflineSync() *cobra.Command {
 }
 
 func offlineSync(cmd *cobra.Command, _ []string) error {
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
+
+	// enable pprof
+	svc := node.MakePPROF("localhost", 6060)
+	go svc.Run(ctx)
+
 	// get the db path from the flags
 	feederDBPath, err := cmd.Flags().GetString("sync-from")
 	if err != nil {
