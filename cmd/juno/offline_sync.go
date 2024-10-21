@@ -49,7 +49,7 @@ func offlineSync(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	feederBc := blockchain.New(feederDB, &utils.Sepolia)
+	feederBc := blockchain.New(feederDB, &utils.Mainnet)
 
 	nodeDBPath, err := cmd.Flags().GetString(dbPathF)
 	if err != nil {
@@ -67,7 +67,7 @@ func offlineSync(cmd *cobra.Command, _ []string) error {
 	}
 
 	// migrate the node db
-	if err := migration.MigrateIfNeeded(ctx, nodeDB, &utils.Sepolia, log); err != nil {
+	if err := migration.MigrateIfNeeded(ctx, nodeDB, &utils.Mainnet, log); err != nil {
 		if errors.Is(err, context.Canceled) {
 			return fmt.Errorf("DB Migration cancelled")
 		}
@@ -84,7 +84,7 @@ func offlineSync(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	nodeBc := blockchain.New(nodeDB, &utils.Sepolia)
+	nodeBc := blockchain.New(nodeDB, &utils.Mainnet)
 
 	startTime := time.Now()
 	for i := start + 1; i < end+1; i++ {
