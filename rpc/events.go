@@ -372,6 +372,9 @@ func (h *Handler) sendReorg(w jsonrpc.Conn, reorg *sync.ReorgData, id uint64) er
 	return err
 }
 
+// SubscribeTxnStatus subscribes to status changes of a transaction. It checks for updates each time a new block is added.
+// Subsequent updates are sent only when the transaction status changes.
+// The optional block_id parameter is ignored, as status changes are not stored and historical data cannot be sent.
 func (h *Handler) SubscribeTxnStatus(ctx context.Context, txHash felt.Felt, _ *BlockID) (*SubscriptionID, *jsonrpc.Error) {
 	var (
 		lastKnownStatus, lastSendStatus *TransactionStatus
