@@ -13,6 +13,12 @@ import (
 
 const subscribeEventsChunkSize = 1024
 
+type SubscriptionResponse struct {
+	Version string `json:"jsonrpc"`
+	Method  string `json:"method"`
+	Params  any    `json:"params"`
+}
+
 func (h *Handler) SubscribeEvents(ctx context.Context, fromAddr *felt.Felt, keys [][]felt.Felt,
 	blockID *BlockID,
 ) (*SubscriptionID, *jsonrpc.Error) {
@@ -158,7 +164,7 @@ func sendEvents(ctx context.Context, w jsonrpc.Conn, events []*blockchain.Filter
 				},
 			}
 
-			resp, err := json.Marshal(jsonrpc.Request{
+			resp, err := json.Marshal(SubscriptionResponse{
 				Version: "2.0",
 				Method:  "starknet_subscriptionEvents",
 				Params: map[string]any{
